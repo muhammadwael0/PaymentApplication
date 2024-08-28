@@ -1,1 +1,1 @@
-# PaymentApplication
+# Payment Application

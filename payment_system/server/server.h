@@ -6,6 +6,8 @@
 #include "../card/card.h"
 #include "../terminal/terminal.h"
 #include "../../data_base/file_handling/file_handling.h"
+#include "../../data_structure/list/list.h"
+#include "../../data_structure/queue/queue.h"
 
 
 typedef enum EN_transaction_t {

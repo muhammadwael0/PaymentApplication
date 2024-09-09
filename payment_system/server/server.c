@@ -5,20 +5,25 @@ static struct Node *list = NULL;
 EN_transaction_t receiveTransactionData(ST_transaction_t *transactionData)
 {
     EN_transaction_t transactionError = APPROVED;
+    EN_serverError_t serverError = SERVER_OK;
     struct accountData accountData;
     read_data_from_cards(&list);
-    if (isValidAccount(&transactionData->cardHolderData, &accountData) == SERVER_OK)
+    serverError = isValidAccount(&transactionData->cardHolderData, &accountData);
+    if (serverError == SERVER_OK)
     {
         ST_accountsDB_t accountsDb;
         accountsDb.balance = accountData.balance;
         accountsDb.state = (!strcmp(accountData.state, "RUNNING") ? RUNNING : BLOCKED);
         strcpy(accountsDb.primaryAccountNumber, accountData.primaryAccountNumber);
-        if (isBlockedAccount(&accountsDb) == SERVER_OK)
+        serverError = isBlockedAccount(&accountsDb);
+        if (serverError == SERVER_OK)
         {
-            if (isAmountAvailable(&transactionData->terminalData, &accountsDb) == SERVER_OK)
+            serverError = isAmountAvailable(&transactionData->terminalData, &accountsDb);
+            if (serverError == SERVER_OK)
             {
                 accountData.balance -= transactionData->terminalData.transAmount;
                 update_node(list, &accountData);
+                write_data_to_cards(list);
             }
             else
             {
@@ -34,17 +39,18 @@ EN_transaction_t receiveTransactionData(ST_transaction_t *transactionData)
     {
         transactionError = FRAUD_CARD;
     }
-    if (transactionError == APPROVED)
-    {
-        write_data_to_cards(list);
-        saveTransaction(transactionData);
-    }
-    else
+    transactionData->transState = transactionError;
+    serverError = saveTransaction(transactionData);
+    if (serverError != SERVER_OK)
     {
         transactionError = INTERNAL_SERVER_ERROR;
     }
-
-    free_memory(list);
+    else
+    {
+        /* do nothing */
+    }
+    destroy_List(list);
+    list = NULL;
     return transactionError;
 }
 
@@ -61,6 +67,7 @@ EN_serverError_t isValidAccount(ST_cardData_t *cardData, struct accountData *acc
     {
         while (tempNode != NULL)
         {
+
             if (!strcmp(cardData->primaryAccountNumber, tempNode->NodeData.primaryAccountNumber))
             {
                 found = true;
@@ -136,7 +143,14 @@ EN_serverError_t saveTransaction(ST_transaction_t *transactionData)
 
     strcpy(queue_obj.transactionDate, transactionData->terminalData.transactionDate);
     queue_obj.transactionAmount = transactionData->terminalData.transAmount;
-    strcpy(queue_obj.transactionState, (transactionData->transState == RUNNING ? "RUNNING" : "BLOCKED"));
+    if (transactionData->transState == APPROVED)
+    {
+        strcpy(queue_obj.transactionState, "Approved");
+    }
+    else
+    {
+        strcpy(queue_obj.transactionState, "Declined");
+    }
     queue_obj.terminalMaxAmount = transactionData->terminalData.maxTransAmount;
     strcpy(queue_obj.cardHolderName, transactionData->cardHolderData.cardHolderName);
     strcpy(queue_obj.PAN, transactionData->cardHolderData.primaryAccountNumber);
@@ -148,18 +162,18 @@ EN_serverError_t saveTransaction(ST_transaction_t *transactionData)
         fileError = read_data_from_transaction(queue);
         if (fileError == FILE_OK)
         {
+            ptr = QueueRear(queue, &status);
+            if (ptr != NULL)
+            {
+                queue_obj.transactionSequenceNumber = ptr->transactionSequenceNumber + 1;
+            }
+            else
+            {
+                queue_obj.transactionSequenceNumber = 100000;
+            }
             status = EnqueueElement(queue, &queue_obj);
             if (status == QUEUE_OK)
             {
-                ptr = QueueRear(queue, &status);
-                if (ptr != NULL)
-                {
-                    queue_obj.transactionSequenceNumber = ptr->transactionSequenceNumber + 1;
-                }
-                else
-                {
-                    queue_obj.transactionSequenceNumber = 56740000;
-                }
                 fileError = write_data_to_transaction(queue);
             }
             else
@@ -185,6 +199,7 @@ EN_serverError_t saveTransaction(ST_transaction_t *transactionData)
         /* do nothing */
     }
     status = DestroyQueue(queue);
+    queue = NULL;
     return serverError;
 }
 
@@ -206,16 +221,16 @@ void listSavedTransaction(void)
                 transactionData = DequeueElement(queue, &status);
                 if (status == QUEUE_OK && transactionData != NULL)
                 {
-                    printf("########################################################\n");
-                    printf("Transaction Sequence Number: %i\n", transactionData->transactionSequenceNumber);
-                    printf("Transaction Date: %s\n", transactionData->transactionDate);
-                    printf("Transaction Amount: %.2f $\n", transactionData->transactionAmount);
-                    printf("Transaction State: %s\n", transactionData->transactionState);
-                    printf("Terminal Max Amount: %.2f $\n", transactionData->terminalMaxAmount);
-                    printf("Card Holder Name: %s\n", transactionData->cardHolderName);
-                    printf("PAN: %s\n", transactionData->PAN);
-                    printf("Card Expiration Date: %s\n", transactionData->EXP_DATE);
-                    printf("########################################################\n");
+                    printf("%s#############################################################%s\n", YELLOW, RESET);
+                    printf("%sTransaction Sequence Number: %s%i%s\n", BLUE, GREEN, transactionData->transactionSequenceNumber, RESET);
+                    printf("%sTransaction Date: %s%s%s\n", BLUE, GREEN, transactionData->transactionDate, RESET);
+                    printf("%sTransaction Amount: %s%.2f $%s\n", BLUE, GREEN, transactionData->transactionAmount, RESET);
+                    printf("%sTransaction State: %s%s%s\n", BLUE, GREEN, transactionData->transactionState, RESET);
+                    printf("%sTerminal Max Amount: %s%.2f $%s\n", BLUE, GREEN, transactionData->terminalMaxAmount, RESET);
+                    printf("%sCard Holder Name: %s%s%s\n", BLUE, GREEN, transactionData->cardHolderName, RESET);
+                    printf("%sPAN: %s%s%s\n", BLUE, GREEN, transactionData->PAN, RESET);
+                    printf("%sCard Expiration Date: %s%s%s\n", BLUE, GREEN, transactionData->EXP_DATE, RESET);
+                    printf("%s#############################################################%s\n", YELLOW, RESET);
                 }
                 else
                 {
@@ -235,5 +250,5 @@ void listSavedTransaction(void)
         /* do nothing */
     }
     status = DestroyQueue(queue);
-
+    queue = NULL;
 }

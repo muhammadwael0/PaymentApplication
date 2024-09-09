@@ -38,8 +38,10 @@ EN_terminalError_t isCardExpired(ST_cardData_t *cardData, ST_terminalData_t *ter
 EN_terminalError_t getTransactionAmount(ST_terminalData_t *terminalData)
 {
     EN_terminalError_t terminalError = TERMINAL_OK;
-    printf("Enter Transaction Amount: ");
+    printf("%sEnter Transaction Amount: %s", BLUE, GREEN);
+    fflush(stdin);
     scanf("%f", &terminalData->transAmount);
+    printf("%s", RESET);
     if (terminalData->transAmount <= 0)
     {
         terminalData->transAmount = 0;
@@ -84,10 +86,10 @@ EN_terminalError_t isValidCardPan(ST_cardData_t *cardData)
 {
     EN_terminalError_t terminalError = TERMINAL_OK;
 
-    uint8 digit_count = 0, iter = 0;
+    sint8 digit_count = 0, iter = 0;
     int checkSum = 0;
-
-    for (iter = 19; iter >= 0; --iter) {
+    uint8 length = strlen(cardData->primaryAccountNumber);
+    for (iter = length - 1; iter >= 0; --iter) {
         uint8 digit = cardData->primaryAccountNumber[iter] - '0';
         digit_count++;
         if (digit_count % 2 == 0)
@@ -97,9 +99,16 @@ EN_terminalError_t isValidCardPan(ST_cardData_t *cardData)
             {
                 digit -= 9;
             }
+            else
+            {
+                /* do nothing */
+            }
+        }
+        else
+        {
+            /* do nothing */
         }
         checkSum += digit;
-
     }
     if (checkSum % 10 == 0)
     {

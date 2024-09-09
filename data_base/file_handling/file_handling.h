@@ -8,8 +8,8 @@
 #include "../../libs/std_types.h"
 
 
-#define CARD_FILE_DB "../../data_base/data/card.csv"
-#define TRANSACTION_FILE_DB "../../data_base/data/transactions.csv"
+#define CARD_FILE_DB "../data_base/data/cards.csv"
+#define TRANSACTION_FILE_DB "../data_base/data/transactions.csv"
 
 
 typedef enum EN_fileError_t {

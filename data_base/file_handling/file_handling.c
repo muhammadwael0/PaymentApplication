@@ -14,14 +14,14 @@ EN_fileError_t write_data_to_cards(struct Node *List)
         fprintf(cards_DB, "Holder Name,PAN,EXP_DATE,Balance,State\n");
         while (tempNode != NULL)
         {
-            fprintf(cards_DB, "%s,%s,%s,%f,%s\n", tempNode->NodeData.cardHolderName,
+            fprintf(cards_DB, "%s,%s,%s,%.2f,%s\n", tempNode->NodeData.cardHolderName,
                     tempNode->NodeData.primaryAccountNumber, tempNode->NodeData.cardExpirationDate,
                     tempNode->NodeData.balance, tempNode->NodeData.state);
             tempNode = tempNode->NodeLink;
         }
-        fclose(cards_DB);
-    }
 
+    }
+    fclose(cards_DB);
     cards_DB = NULL;
     return fileError;
 }
@@ -34,11 +34,11 @@ EN_fileError_t read_data_from_cards(struct Node **List)
     struct accountData *accountData = NULL;
     if (cards_DB == NULL)
     {
-
+        /* do nothing */
     }
     else
     {
-        line_buffer = (uint8 *)calloc(80, sizeof(uint8));
+        line_buffer = (uint8 *)calloc(150, sizeof(uint8));
         accountData = (struct accountData *) malloc(sizeof (struct accountData));
         if (line_buffer == NULL || accountData == NULL)
         {
@@ -46,16 +46,16 @@ EN_fileError_t read_data_from_cards(struct Node **List)
         }
         else
         {
-            fgets(line_buffer, 80, cards_DB);
+            fgets(line_buffer, 150, cards_DB);
 
-            while(fgets(line_buffer, 80, cards_DB) != NULL)
+            while(fgets(line_buffer, 150, cards_DB) != NULL)
             {
-                sscanf(strtok(line_buffer, ","), "%s", accountData->cardHolderName);
+                sscanf(strtok(line_buffer, ","), "%[^,]s", accountData->cardHolderName);
                 sscanf(strtok(NULL, ","), "%s", accountData->primaryAccountNumber);
                 sscanf(strtok(NULL, ","), "%s", accountData->cardExpirationDate);
                 sscanf(strtok(NULL, ","), "%f", &(accountData)->balance);
                 sscanf(strtok(NULL, ""), "%s", accountData->state);
-                push_front(List, *accountData);
+                push_back(List, *accountData);
             }
         }
 
@@ -87,7 +87,7 @@ EN_fileError_t write_data_to_transaction(Queue_t *queue)
             struct transactionData *queue_obj = DequeueElement(queue, &state);
             if (state == QUEUE_OK)
             {
-                fprintf(transaction_DB, "%i,%s,%f,%s,%f,%s,%s,%s\n", queue_obj->transactionSequenceNumber,
+                fprintf(transaction_DB, "%i,%s,%.2f,%s,%.2f,%s,%s,%s\n", queue_obj->transactionSequenceNumber,
                         queue_obj->transactionDate, queue_obj->transactionAmount, queue_obj->transactionState,
                         queue_obj->terminalMaxAmount, queue_obj->cardHolderName, queue_obj->PAN, queue_obj->EXP_DATE);
             }
@@ -131,7 +131,7 @@ EN_fileError_t read_data_from_transaction(Queue_t *queue)
                 sscanf(strtok(NULL, ","), "%f", &transactionData.transactionAmount);
                 sscanf(strtok(NULL, ","), "%s", transactionData.transactionState);
                 sscanf(strtok(NULL, ","), "%f", &transactionData.terminalMaxAmount);
-                sscanf(strtok(NULL, ","), "%s", transactionData.cardHolderName);
+                sscanf(strtok(NULL, ","), "%[^,]s", transactionData.cardHolderName);
                 sscanf(strtok(NULL, ","), "%s", transactionData.PAN);
                 sscanf(strtok(NULL, ""), "%s", transactionData.EXP_DATE);
                 QueueStatus_t state = EnqueueElement(queue, &transactionData);

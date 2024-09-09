@@ -5,14 +5,18 @@ EN_cardError_t getCardHolderName(ST_cardData_t *cardData)
     char name[30] = "\0";
     EN_cardError_t cardError = CARD_OK; /* cardError tor return error state */
     size_t len = 0, iter = 0; /* length of string, iter to iterate through string */
-    printf("Enter Holder Name: ");
-    scanf("%s", name);
+    printf("%sEnter Holder Name: %s", BLUE, GREEN);
+    fflush(stdin);
+    fgets(name, sizeof(name), stdin);
+    printf("%s", RESET);
     len = strlen(name);
+    name[len - 1] = '\0';
+
     if(len >= 20 && len <= 24)
     {
-        for (iter = 0; iter < len; ++iter)
+        for (iter = 0; iter < len - 1; ++iter)
         {
-            if ((name[iter] >= 'A' && name[iter] <= 'Z') || (name[iter] >= 'a' && name[iter] <= 'z'))
+            if ((name[iter] >= 'A' && name[iter] <= 'Z') || (name[iter] >= 'a' && name[iter] <= 'z') || name[iter] == ' ')
             {
                 /* do nothing */
             }
@@ -39,8 +43,10 @@ EN_cardError_t getCardExpirationDate(ST_cardData_t *cardData)
     char expDate[10] = "\0";
     EN_cardError_t cardError = CARD_OK; /* cardError tor return error state */
     size_t len = 0; /* length of string */
-    printf("Enter Expiration Date: ");
+    printf("%sEnter Expiration Date: %s", BLUE, GREEN);
+    fflush(stdin);
     scanf("%s", expDate);
+    printf("%s", RESET);
     len = strlen(expDate);
     if(len == 5)
     {
@@ -74,8 +80,10 @@ EN_cardError_t getCardPan(ST_cardData_t *cardData)
     char pan[30] = "\0";
     EN_cardError_t cardError = CARD_OK; /* cardError tor return error state */
     size_t len = 0, iter = 0; /* length of string, iter to iterate through string */
-    printf("Enter PAN-Number: ");
+    printf("%sEnter PAN: %s", BLUE, GREEN);
+    fflush(stdin);
     scanf("%s", pan);
+    printf("%s", RESET);
     len = strlen(pan);
     if(len >= 16 && len <= 19)
     {

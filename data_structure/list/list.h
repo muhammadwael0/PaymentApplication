@@ -21,7 +21,6 @@ struct Node{
     struct Node *NodeLink;
 };
 
-//extern struct Node *ListHead;
 
 void find_node(struct Node *List, uint8 *cardPan, struct accountData *accountData);
 
@@ -41,7 +40,7 @@ void display_all(struct Node *List);
 
 uint32 length(struct Node *List);
 
-void free_memory(struct Node *List);
+void destroy_List(struct Node *List);
 
 
 #endif

@@ -1,7 +1,5 @@
 #include "list.h"
 
-//struct Node *ListHead = NULL;
-
 
 //void find_node(struct Node *List, uint8 *cardPan, struct accountData *accountData)
 //{

@@ -9,7 +9,7 @@ struct transactionData
     uint32 transactionSequenceNumber;
     uint8 transactionDate[11];
     float transactionAmount;
-    uint8 transactionState[8];
+    uint8 transactionState[9];
     float terminalMaxAmount;
     uint8 cardHolderName[25];
     uint8 PAN[20];
